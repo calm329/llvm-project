@@ -2205,6 +2205,18 @@ SemaHLSL::TakeLocForHLSLAttribute(const HLSLAttributedResourceType *RT) {
 void SemaHLSL::collectResourceBindingsOnUserRecordDecl(const VarDecl *VD,
                                                        const RecordType *RT) {
   const RecordDecl *RD = RT->getDecl()->getDefinitionOrSelf();
+
+  // Scan base class for resources (HLSL only supports single inheritance)
+  if (const CXXRecordDecl *CXXRD = dyn_cast<CXXRecordDecl>(RD)) {
+    if (CXXRD->getNumBases()) {
+      assert(CXXRD->getNumBases() == 1 &&
+             "HLSL doesn't support multiple inheritance");
+      const CXXBaseSpecifier &Base = *CXXRD->bases_begin();
+      if (const RecordType *BaseRT = Base.getType()->getAs<RecordType>())
+        collectResourceBindingsOnUserRecordDecl(VD, BaseRT);
+    }
+  }
+
   for (FieldDecl *FD : RD->fields()) {
     const Type *Ty = FD->getType()->getUnqualifiedDesugaredType();
 

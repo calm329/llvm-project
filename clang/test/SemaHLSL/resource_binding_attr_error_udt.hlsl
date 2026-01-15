@@ -130,6 +130,34 @@ Eg14 e14 : register(t9);
 
 struct Eg15 {
   float f[4];
-}; 
+};
 // expected no error
 Eg15 e15 : register(c0);
+
+// Valid: resources in base class are found
+struct Eg16Base {
+  MySRV SRVBuf;
+  MyUAV UAVBuf;
+};
+struct Eg16 : Eg16Base {
+};
+Eg16 e16 : register(u10) : register(t20);
+
+// Valid: resources in nested base class are found
+struct Eg17Base1 {
+  MySampler Samp;
+};
+struct Eg17Base2 : Eg17Base1 {
+  MyUAV UAVBuf;
+};
+struct Eg17 : Eg17Base2 {
+};
+Eg17 e17 : register(s0) : register(u0);
+
+struct Eg18Base {
+  MySRV SRVBuf;
+};
+struct Eg18 : Eg18Base {
+};
+// expected-warning@+1{{binding type 'u' only applies to types containing UAV resources}}
+Eg18 e18 : register(u0);
